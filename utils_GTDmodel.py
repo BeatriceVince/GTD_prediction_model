@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from scipy import stats
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import OneHotEncoder
 from sklearn import preprocessing
 from joblib import dump
@@ -55,5 +57,58 @@ def svc_param_selection(filename_tuning, Cs, gamma, class_weight, n_folds, X_tra
     print(grid_search.best_params_) 
     #class_weight='balanced': C = 1000; gamma = 0.001; best_f1 = 0.69223775 
     np.savez_compressed(filename_tuning, mean_f1_micro_test_score=mean_f1_micro_test_score, C=grid_search.best_params_['C'], gamma=grid_search.best_params_['gamma'])
+    
+def imbalanced_resampling(X_set, Y_target):
+    #RE-BALANCED DATSET USING IMBALANCED-LEARN
+    #print('plotting sparse matrix dataset')
+    #plt.figure(figsize=(14,12))
+    #plt.spy(X_set, aspect='auto')
+    print('starting resample')
+    Y_arr_target = [elem[0] for elem in Y_target]
+    smote_enn = SMOTEENN(random_state=42)
+    smote_enn.fit(X_set, Y_arr_target)
+    X_resampled, y_resampled = smote_enn.sample(X_set, Y_arr_target)
+    #print(sorted(Counter(y_resampled).items()))
+    return X_resampled, y_resampled
 
+# function to compute label weights 
+def func_threshold(p_curr_label, p_i_threshold, delta_threshold):
+    if p_curr_label <= (p_i_threshold+delta_threshold) and p_curr_label >= (p_i_threshold-delta_threshold):
+        #print 'p_curr_label: '+str(p_curr_label)+' p_i_threshold: '+str(p_i_threshold)+' return 1'        
+        return 1
+    else:
+        #print 'p_curr_label: '+str(p_curr_label)+' p_i_threshold: '+str(p_i_threshold)+' return 0'
+        return 0
+    
+def print_plot_distribution(new_info_y_target, new_count_y_target, tot_examples):
+    sorted_labels = np.sort(new_count_y_target)
+    index_sorted_labels = np.argsort(new_count_y_target)
+    perc_labels = (sorted_labels/float(tot_examples))*100
+    
+    print('new info label distribution:')
+    print('list sorted occurence labels')
+    print(str(list(sorted_labels)))
+    print('frequence labels')
+    print(str(list(perc_labels)))
+    print('max occurence: '+str(np.max(new_count_y_target)))
+    print('min occurence: '+str(np.min(new_count_y_target)))
+    #print('mean occurence: '+str(np.mean(new_count_y_target)))
+    print('median: '+str(np.median(new_count_y_target)))
+    mode = stats.mode(new_count_y_target)
+    print('mode occurence: '+str(mode[1]))
+    print('the most frequent occurence '+str(mode[0]))
+    #PLOT DISTRUBUTION
+    norm = []
+    for i in range(len(new_count_y_target)):
+        norm.append(list(new_count_y_target)[i]/(float(sum(list(new_count_y_target)))))
+    fig = plt.figure()
+    ind = np.arange(new_count_y_target.shape[0])                # the x locations for the groups
+    width = 0.35                      # the width of the bars
+    plt.bar(ind, norm, width, color='blue')
+    plt.xlim(-width,len(ind)+width)
+    plt.ylim(0,0.15)
+    plt.title("Target Labels Distribution")
+    plt.xlabel("Labels")
+    plt.ylabel("Normalized Frequency Labels")
+    plt.show()
     
