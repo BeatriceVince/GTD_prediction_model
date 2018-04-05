@@ -1,0 +1,92 @@
+starting resample
+---------------------------------------------------------------------------
+MemoryError                               Traceback (most recent call last)
+<ipython-input-119-c182e20a34e9> in <module>()
+      7 smote_enn = SMOTEENN(random_state=42)
+      8 smote_enn.fit(X_set, Y_arr_target)
+----> 9 X_resampled, y_resampled = smote_enn.sample(X_set, Y_arr_target)
+     10 #print(sorted(Counter(y_resampled).items()))
+
+~\Anaconda3\lib\site-packages\imblearn\base.py in sample(self, X, y)
+     62         self._check_X_y(X, y)
+     63 
+---> 64         return self._sample(X, y)
+     65 
+     66     def fit_sample(self, X, y):
+
+~\Anaconda3\lib\site-packages\imblearn\combine\smote_enn.py in _sample(self, X, y)
+    325 
+    326         X_res, y_res = self.smote_.fit_sample(X, y)
+--> 327         return self.enn_.fit_sample(X_res, y_res)
+
+~\Anaconda3\lib\site-packages\imblearn\base.py in fit_sample(self, X, y)
+     86         """
+     87 
+---> 88         return self.fit(X, y).sample(X, y)
+     89 
+     90     @abstractmethod
+
+~\Anaconda3\lib\site-packages\imblearn\base.py in sample(self, X, y)
+     62         self._check_X_y(X, y)
+     63 
+---> 64         return self._sample(X, y)
+     65 
+     66     def fit_sample(self, X, y):
+
+~\Anaconda3\lib\site-packages\imblearn\under_sampling\prototype_selection\edited_nearest_neighbours.py in _sample(self, X, y)
+    194                 y_class = safe_indexing(y, target_class_indices)
+    195                 nnhood_idx = self.nn_.kneighbors(
+--> 196                     X_class, return_distance=False)[:, 1:]
+    197                 nnhood_label = y[nnhood_idx]
+    198                 if self.kind_sel == 'mode':
+
+~\Anaconda3\lib\site-packages\sklearn\neighbors\base.py in kneighbors(self, X, n_neighbors, return_distance)
+    355             if self.effective_metric_ == 'euclidean':
+    356                 dist = pairwise_distances(X, self._fit_X, 'euclidean',
+--> 357                                           n_jobs=n_jobs, squared=True)
+    358             else:
+    359                 dist = pairwise_distances(
+
+~\Anaconda3\lib\site-packages\sklearn\metrics\pairwise.py in pairwise_distances(X, Y, metric, n_jobs, **kwds)
+   1245         func = partial(distance.cdist, metric=metric, **kwds)
+   1246 
+-> 1247     return _parallel_pairwise(X, Y, func, n_jobs, **kwds)
+   1248 
+   1249 
+
+~\Anaconda3\lib\site-packages\sklearn\metrics\pairwise.py in _parallel_pairwise(X, Y, func, n_jobs, **kwds)
+   1088     if n_jobs == 1:
+   1089         # Special case to avoid picklability checks in delayed
+-> 1090         return func(X, Y, **kwds)
+   1091 
+   1092     # TODO: in some cases, backend='threading' may be appropriate
+
+~\Anaconda3\lib\site-packages\sklearn\metrics\pairwise.py in euclidean_distances(X, Y, Y_norm_squared, squared, X_norm_squared)
+    244         YY = row_norms(Y, squared=True)[np.newaxis, :]
+    245 
+--> 246     distances = safe_sparse_dot(X, Y.T, dense_output=True)
+    247     distances *= -2
+    248     distances += XX
+
+~\Anaconda3\lib\site-packages\sklearn\utils\extmath.py in safe_sparse_dot(a, b, dense_output)
+    133     """
+    134     if issparse(a) or issparse(b):
+--> 135         ret = a * b
+    136         if dense_output and hasattr(ret, "toarray"):
+    137             ret = ret.toarray()
+
+~\Anaconda3\lib\site-packages\scipy\sparse\base.py in __mul__(self, other)
+    438             if self.shape[1] != other.shape[0]:
+    439                 raise ValueError('dimension mismatch')
+--> 440             return self._mul_sparse_matrix(other)
+    441 
+    442         # If it's a list or whatever, treat it like a matrix
+
+~\Anaconda3\lib\site-packages\scipy\sparse\compressed.py in _mul_sparse_matrix(self, other)
+    500                                     maxval=nnz)
+    501         indptr = np.asarray(indptr, dtype=idx_dtype)
+--> 502         indices = np.empty(nnz, dtype=idx_dtype)
+    503         data = np.empty(nnz, dtype=upcast(self.dtype, other.dtype))
+    504 
+
+MemoryError: 
