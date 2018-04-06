@@ -48,15 +48,19 @@ def one_hot_encoding(filename, dataset):
     print(enc.categorical_features)
     return X_dataset
 
-def svc_param_selection(filename_tuning, Cs, gamma, class_weight, n_folds, X_train, y_train):
+def svc_param_selection(filename_tuning, Cs, gammas, class_weight, n_folds, X_train, y_train):
     print('start parameters tuning')
     param_grid = {'C': Cs, 'gamma' : gammas}
-    grid_search = GridSearchCV(SVC(kernel='rbf', class_weight=class_weight), param_grid, cv=n_folds, scoring='f1_micro', verbose=10, n_jobs=5)
+    if class_weight=='noWeight':
+        grid_search = GridSearchCV(SVC(kernel='rbf'), param_grid, cv=n_folds, scoring='f1_micro', verbose=10, n_jobs=5)
+    else:
+        grid_search = GridSearchCV(SVC(kernel='rbf', class_weight=class_weight), param_grid, cv=n_folds, scoring='f1_micro', verbose=10, n_jobs=5)
     grid_search.fit(X_train, y_train)
     print('Best parameters for RBF kernel with BALANCED weight classes:')
     print(grid_search.best_params_) 
     #class_weight='balanced': C = 1000; gamma = 0.001; best_f1 = 0.69223775 
-    np.savez_compressed(filename_tuning, mean_f1_micro_test_score=mean_f1_micro_test_score, C=grid_search.best_params_['C'], gamma=grid_search.best_params_['gamma'])
+    np.savez_compressed(filename_tuning, mean_f1_micro_test_score=grid_search.cv_results_['mean_test_score'], C=grid_search.best_params_['C'], gamma=grid_search.best_params_['gamma'])
+    return grid_search
     
 def imbalanced_resampling(X_set, Y_target):
     #RE-BALANCED DATSET USING IMBALANCED-LEARN
@@ -101,14 +105,15 @@ def print_plot_distribution(new_info_y_target, new_count_y_target, tot_examples)
     norm = []
     for i in range(len(new_count_y_target)):
         norm.append(list(new_count_y_target)[i]/(float(sum(list(new_count_y_target)))))
-    fig = plt.figure()
+    fig = plt.figure(figsize=(9,6))
     ind = np.arange(new_count_y_target.shape[0])                # the x locations for the groups
-    width = 0.35                      # the width of the bars
-    plt.bar(ind, norm, width, color='blue')
+    width = 0.45                      # the width of the bars
+    plt.bar(ind, norm, width, color='green')
     plt.xlim(-width,len(ind)+width)
-    plt.ylim(0,0.15)
+    plt.ylim(0,0.12)
     plt.title("Target Labels Distribution")
     plt.xlabel("Labels")
     plt.ylabel("Normalized Frequency Labels")
     plt.show()
+    plt.savefig('labelDistr.png')
     
